@@ -1,5 +1,4 @@
 var tape = require('tape')
-
 var Watercooler = require('../')
 var wc = new Watercooler({db: __dirname + '/db'})
 
@@ -11,17 +10,11 @@ var ex = {
 }
 
 tape('test adding a post', function (t) {
-  ex.tags = ['example_tag', 'photo']
   wc.add(ex, function (err, post) {
     t.notOk(err, 'no error in adding')
-
     wc.get(post.id, function (err, p) {
       t.ok(p)
-
-      wc.getAllWithTag('photo', function (err, res) {
-        t.equals(res.length, 1, 'tag stream should only have one result')
-        t.end()
-      })
+      t.end()
     })
   })
 })
@@ -45,8 +38,6 @@ tape('updating', function (t) {
 })
 
 tape('test upvoting', function (t) {
-  ex.tags = ['vote_test']
-
   wc.add(ex, function (err, post) {
     t.notOk(err)
 
@@ -61,8 +52,6 @@ tape('test upvoting', function (t) {
 })
 
 tape('test downvoting', function (t) {
-  ex.tags = ['downvote_test']
-
   wc.add(ex, function (err, post) {
     t.notOk(err)
     wc.downVote(post.id, function (err) {
@@ -75,10 +64,24 @@ tape('test downvoting', function (t) {
   })
 })
 
+tape('getAllWithTag', function (t) {
+  var tags = ['photo', 'ohno']
+  ex.tags = tags
+
+  wc.add(ex, function (err, post) {
+    wc.getAllWithTag(tags[1], function (err, res) {
+      t.equals(res.length, 1, 'tags should return 1 result')
+      wc.getAllWithTag('nope', function (err, res) {
+        t.equals(res.length, 0, 'no results should return empty')
+        t.end()
+      })
+    })
+  })
+})
+
 tape('test reply', function (t) {
   var reply = {
-    comment: 'hey I am a reply',
-    tags: ['reply']
+    comment: 'hey I am a reply'
   }
 
   wc.add(ex, function (err, p) {
