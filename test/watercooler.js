@@ -26,6 +26,14 @@ tape('test adding a post', function (t) {
   })
 })
 
+tape('not adding a comment results in an Error', function (t) {
+  wc.add({}, function (err) {
+    t.ok(err, 'error exists')
+    t.ok(err instanceof Error, 'err instanceof Error')
+    t.end()
+  })
+})
+
 tape('test upvoting', function (t) {
   ex.tags = ['vote_test']
 
@@ -63,12 +71,10 @@ tape('test reply', function (t) {
     tags: ['reply']
   }
 
-  ex.tags = ['original']
-
   wc.add(ex, function (err, p) {
     wc.addReply(p.id, reply, function (err, r) {
       t.equals(reply.comment, r.comment, 'returns reply and not related post')
-      t.ok(reply.replyTo)
+      t.equals(reply.replyTo, p.id, 'linked on replyTo')
       wc.get(reply.replyTo, function (err, post) {
         t.equals(post.replies.length, 1, 'related post has one reply')
         t.equals(post.replies[0].id, r.id, 'reply exists in related post reply array')
