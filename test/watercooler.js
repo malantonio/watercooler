@@ -34,6 +34,16 @@ tape('not adding a comment results in an Error', function (t) {
   })
 })
 
+tape('updating', function (t) {
+  wc.add(ex, function (err, p) {
+    var update = p.comment = 'LOL I\'M DIFFERENT!'
+    wc.update(p.id, p, function (err, u) {
+      t.deepEquals(u, p)
+      t.end()
+    })
+  })
+})
+
 tape('test upvoting', function (t) {
   ex.tags = ['vote_test']
 

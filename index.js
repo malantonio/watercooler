@@ -127,18 +127,33 @@ Watercooler.prototype.get = function getPost (pid, next) {
   return this.db.get(keys.post(pid), next)
 }
 
-Watercooler.prototype.getAllWithTag = function getAllWithTag (tag, next) {
-  var cleanKey = keys.tag(tag, '').replace(/\#$/, '')
+Watercooler.prototype.getAllWithTag = function getAllWithTag (tag, opts, next) {
+  return this.getAllWith('tag', tag, opts, next)
+}
+
+Watercooler.prototype.getAllWithUser = function getAllWithUser (user, opts, next) {
+  return this.getAllWith('user', user, opts, next)
+}
+
+Watercooler.prototype.getAllWith = function getAllWith (field, key, opts, next) {
+  if (!keys[field]) return next(new Error('Field not indexed'))
+  if (typeof opts === 'function') {
+    next = opts
+    opts = {}
+  }
+
+  var cleanKey = keys[field](key, '').replace(/\#$/, '')
   var streamOpts = {
     gt: cleanKey,
-    lt: cleanKey + '\xff'
+    lt: cleanKey + '\xff',
+    // limit: opts.limit || 10 // paginate?
   }
-  var posts = []
+  var results = []
 
-  var tagStream = this.db.createReadStream(streamOpts)
-  tagStream.on('data', function (d) { posts.push(d) })
-  tagStream.on('end', function () { return next(null, posts) })
-  tagStream.on('error', next)
+  var stream = this.db.createReadStream(streamOpts)
+  stream.on('data', function (d) { results.push(d) })
+  stream.on('end', function () { return next(null, results) })
+  stream.on('error', next)
 }
 
 Watercooler.prototype.downVote = function downVote (id, next) {
