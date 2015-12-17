@@ -83,3 +83,33 @@ tape('test reply', function (t) {
     })
   })
 })
+
+tape('test delete', function (t) {
+  wc.add(ex, function (err, p) {
+    wc.delete(p.id, function (err) {
+      wc.get(p.id, function (err) {
+        t.ok(err.notFound, 'not found error returned')
+        t.end()
+      })
+    })
+  })
+})
+
+tape('test delete with reply', function (t) {
+  var reply = { comment: 'reply here!' }
+  var reply2 = { comment: 'me too!' }
+
+  wc.add(ex, function (err, p) {
+    wc.addReply(p.id, reply, function (err, re1) {
+      wc.addReply(p.id, reply2, function (err, re2) {
+        wc.delete(re1.id, function (err) {
+          wc.get(p.id, function (err, post) {
+            t.equals(post.replies.length, 1, 'only 1 reply remains')
+            t.equals(post.replies[0].id, re2.id, 'and the id matches!')
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})

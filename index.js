@@ -45,6 +45,7 @@ function Watercooler (opts) {
 Watercooler.prototype.add = function addPost (post, next) {
   if (!post.comment) return next(new Error('Invalid comment!'))
   if (!post.author) post.author = 'anonymous'
+  if (!post.type) post.type = 'post'
   if (!post.tags) post.tags = []
   if (!next) next = noop
 
@@ -62,12 +63,33 @@ Watercooler.prototype.add = function addPost (post, next) {
 Watercooler.prototype.addReply = function addReply (origId, post, next) {
   var self = this
   post.replyTo = origId
-  
+  post.type = 'reply'
+
   return self.add(post, function (err, p) {
     self.get(origId, function (err, orig) {
       orig.replies.push(p)
       self.update(orig.id, orig, function (err) {
         return next(null, p)
+      })
+    })
+  })
+}
+
+Watercooler.prototype.delete = function deletePost (pid, next) {
+  var self = this
+  // first let's retreive the post
+  this.get(pid, function (err, post) {
+    if (err) return next(err)
+
+    self.db.del(keys.post(pid), function (err) {
+      if (err) return next(err)
+      if (!post.replyTo) return next(null)
+
+      self.get(post.replyTo, function (err, orig) {
+        if (err) return next(err)
+
+        orig.replies = orig.replies.filter(function (r) { return r.id !== pid })
+        return self.update(orig.id, orig, next)
       })
     })
   })
