@@ -4,7 +4,8 @@
   "description": "post a comment. tag it. up/down vote it. store it in a leveldb instance.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/* && node -e \"require('leveldown').destroy('./test/db', function (){})\""
+    "test": "npm run test:teardown && node test/* && npm run test:teardown",
+    "test:teardown": "node -e \"require('leveldown').destroy('./test/db', function (){})\""
   },
   "keywords": [],
   "author": "Adam Malantonio <adam.malantonio@gmail.com>",
